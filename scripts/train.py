@@ -1,7 +1,4 @@
 
-`scripts\train.py`
-
-```python
 import argparse
 from pathlib import Path
 

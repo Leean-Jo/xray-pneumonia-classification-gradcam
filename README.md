@@ -30,3 +30,22 @@ xray-pneumonia-classification-gradcam/
       ├─ engine/
       ├─ utils/
       └─ explain/
+
+# Dataset structure
+
+data/raw/chest_xray/
+├─ train/
+│  ├─ NORMAL/
+│  └─ PNEUMONIA/
+├─ val/
+│  ├─ NORMAL/
+│  └─ PNEUMONIA/
+└─ test/
+   ├─ NORMAL/
+   └─ PNEUMONIA/
+
+
+   ## Sample Result
+
+### Grad-CAM Example
+![Grad-CAM Example](assets/gradcam_example.png)
