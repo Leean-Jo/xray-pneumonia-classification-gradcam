@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -9,6 +10,7 @@ from xray_cls.data.transforms import get_eval_transforms
 from xray_cls.engine.trainer import Trainer
 from xray_cls.models.classifier import XRayClassifier
 from xray_cls.utils.io import load_config
+from xray_cls.utils.visualization import save_confusion_matrix
 
 
 def main(config_path: str, checkpoint_path: str):
@@ -20,6 +22,7 @@ def main(config_path: str, checkpoint_path: str):
         split="test",
         transform=get_eval_transforms(config["data"]["image_size"]),
     )
+
     test_loader = DataLoader(
         test_dataset,
         batch_size=config["data"]["batch_size"],
@@ -43,8 +46,24 @@ def main(config_path: str, checkpoint_path: str):
         device=device,
     )
 
-    metrics = trainer.validate(test_loader)
-    print("Test Metrics:", metrics)
+    metrics, y_true, y_prob = trainer.predict(test_loader)
+
+    print("Test Metrics")
+    for key, value in metrics.items():
+        if isinstance(value, float):
+            print(f"{key}: {value:.4f}")
+        else:
+            print(f"{key}: {value}")
+
+    save_path = Path("outputs/figures/confusion_matrix.png")
+    save_confusion_matrix(
+        y_true=y_true,
+        y_prob=y_prob,
+        save_path=str(save_path),
+        threshold=0.5,
+    )
+
+    print(f"Saved confusion matrix to {save_path}")
 
 
 if __name__ == "__main__":

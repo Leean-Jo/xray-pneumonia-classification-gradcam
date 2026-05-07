@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import torch
 from tqdm import tqdm
@@ -42,12 +42,17 @@ class Trainer:
 
     @torch.no_grad()
     def validate(self, dataloader) -> Dict[str, float]:
+        metrics, _, _ = self.predict(dataloader)
+        return metrics
+
+    @torch.no_grad()
+    def predict(self, dataloader) -> Tuple[Dict[str, float], List[int], List[float]]:
         self.model.eval()
         running_loss = 0.0
         all_targets = []
         all_probs = []
 
-        for images, labels, _ in tqdm(dataloader, desc="Valid", leave=False):
+        for images, labels, _ in tqdm(dataloader, desc="Predict", leave=False):
             images = images.to(self.device)
             labels = labels.unsqueeze(1).to(self.device)
 
@@ -56,10 +61,11 @@ class Trainer:
             probs = torch.sigmoid(logits)
 
             running_loss += loss.item() * images.size(0)
-            all_targets.extend(labels.detach().cpu().numpy().ravel().tolist())
+            all_targets.extend(labels.detach().cpu().numpy().ravel().astype(int).tolist())
             all_probs.extend(probs.detach().cpu().numpy().ravel().tolist())
 
         epoch_loss = running_loss / len(dataloader.dataset)
         metrics = compute_classification_metrics(all_targets, all_probs)
         metrics["loss"] = epoch_loss
-        return metrics
+
+        return metrics, all_targets, all_probs
